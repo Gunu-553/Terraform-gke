@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+
+    environment {
+        // Make sure to use the Secret File type and the correct ID
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')  // This is the ID of the secret file you uploaded
+    }
+
+    stages {
+        stage('Authenticate with GCP') {
+            steps {
+                script {
+                    // Authenticate with Google Cloud using the credentials stored in Jenkins
+                    sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'
+                }
+            }
+        }
+
+        // Other stages, such as Terraform Apply and Kubernetes deploy
+        stage('Checkout') {
+            steps {
+               git branch: 'main', url: 'https://github.com/Gunu-553/Terraform-gke.git'
+            }
+        }
+        
+        stage('Terraform init') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+        
+        stage('Terraform plan') {
+            steps {
+                sh 'terraform plan'
+            }
+        }
+        
+        stage('Terraform apply') {
+            steps {
+                sh 'terraform apply --auto-approve'
+            }
+        }
+        
+        stage('Terraform destroy') {
+            steps {
+                sh 'terraform destroy --auto-approve'
+            }
+        }
+    }
+}
